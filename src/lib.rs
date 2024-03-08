@@ -1,85 +1,85 @@
-#![cfg_attr(not(test), no_std)]
+//! This crate provides a platform agnostic no_std driver for the BH1730FVC ambient light sensor.
+//! The driver is compatible with the [`embedded-hal`](https://crates.io/crates/embedded-hal) traits.
+//!
+//! The datasheet of the sensor can be found [here](https://fscdn.rohm.com/en/products/databook/datasheet/ic/sensor/light/bh1730fvc-e.pdf).
+//!
+//! ## Supported features
+//! * Single-shot and continuous measurement mode
+//! * Configurable integration time and gain
+//! * Reading the part number and revision id of the sensor
+//! * Converting the read raw values into the ambient light intensity in lux
+//!
+//! ## Unsupported features
+//! * Interrupt functionality
+//! * Threshold functionality
+//! * Async
+//!
+//! ## Usage
+//!
+//! ### Creating a driver instance
+//!
+//! ```rust
+//! use bh1730fvc::{BH1730FVC, Gain, Mode};
+//! use embedded_hal::blocking::i2c::{Write, WriteRead};
+//! use embedded_hal::blocking::delay::DelayMs;
+//!
+//!
+//! fn main() {
+//!     let mut delay = MockNoop::new();
+//!     let mut i2c = MockI2c::new();
+//!     let mut sensor = BH1730FVC::new(&mut delay, &mut i2c).unwrap();
+//! }
+//! ```
+//!
+//! ### Reading the ambient light intensity
+//!
+//! ```rust
+//! use bh1730fvc::{BH1730FVC, Gain, Mode};
+//! use embedded_hal::blocking::i2c::{Write, WriteRead};
+//! use embedded_hal::blocking::delay::DelayMs;
+//!
+//! fn main() {
+//!     let mut delay = MockNoop::new();
+//!     let mut i2c = MockI2c::new();
+//!     let mut sensor = BH1730FVC::new(&mut delay, &mut i2c).unwrap();
+//!
+//!     // Read sensor value once, sensor goes back to sleep after this
+//!     // (This blocks the thread for the duration of the measurement)
+//!     let lux = sensor.get_ambient_light_intensity_single_shot(&mut delay, &mut i2c).unwrap();
+//!
+//!     println!("Ambient light intensity: {} lux", lux);
+//! }
+//! ```
+//!
+//! ### Continuous measurement
+//!
+//! ```rust
+//! use bh1730fvc::{BH1730FVC, Gain, Mode};
+//! use embedded_hal::blocking::i2c::{Write, WriteRead};
+//! use embedded_hal::blocking::delay::DelayMs;
+//!
+//! fn main() {
+//!     let mut delay = MockNoop::new();
+//!     let mut i2c = MockI2c::new();
+//!     let mut sensor = BH1730FVC::new(&mut delay, &mut i2c).unwrap();
+//!
+//!     // Start continuous measurement mode, sensor will keep measuring and overwriting the
+//!     // last measured value until stopped
+//!     sensor.start_continuous_measurement(&mut i2c).unwrap();
+//!
+//!     // Read the last measured value (this does not block, but will return error
+//!     // BH1730FVCError::NoDataAvailable if no valid data is available (yet))
+//!     let lux = sensor.get_last_ambient_light_intensity(&mut i2c).unwrap();
+//!
+//!     // Stop continuous measurement mode
+//!     sensor.stop_continuous_measurement(&mut i2c).unwrap();
+//!
+//!     // Print the last measured value
+//!     println!("Ambient light intensity: {} lux", lux);
+//! }
+//! ```
 
-/// This crate provides a platform agnostic no_std driver for the BH1730FVC ambient light sensor.
-/// The driver is compatible with the [`embedded-hal`](https://crates.io/crates/embedded-hal) traits.
-///
-/// The datasheet of the sensor can be found [here](https://fscdn.rohm.com/en/products/databook/datasheet/ic/sensor/light/bh1730fvc-e.pdf).
-///
-/// ## Supported features
-/// * Single-shot and continuous measurement mode
-/// * Configurable integration time and gain
-/// * Reading the part number and revision id of the sensor
-/// * Converting the read raw values into the ambient light intensity in lux
-///
-/// ## Unsupported features
-/// * Interrupt functionality
-/// * Threshold functionality
-/// * Async
-///
-/// ## Usage
-///
-/// ### Creating a driver instance
-///
-/// ```rust
-/// use bh1730fvc::{BH1730FVC, Gain, Mode};
-/// use embedded_hal::blocking::i2c::{Write, WriteRead};
-/// use embedded_hal::blocking::delay::DelayMs;
-///
-///
-/// fn main() {
-///     let mut delay = MockNoop::new();
-///     let mut i2c = MockI2c::new();
-///     let mut sensor = BH1730FVC::new(&mut delay, &mut i2c).unwrap();
-/// }
-/// ```
-///
-/// ### Reading the ambient light intensity
-///
-/// ```rust
-/// use bh1730fvc::{BH1730FVC, Gain, Mode};
-/// use embedded_hal::blocking::i2c::{Write, WriteRead};
-/// use embedded_hal::blocking::delay::DelayMs;
-///
-/// fn main() {
-///     let mut delay = MockNoop::new();
-///     let mut i2c = MockI2c::new();
-///     let mut sensor = BH1730FVC::new(&mut delay, &mut i2c).unwrap();
-///
-///     // Read sensor value once, sensor goes back to sleep after this
-///     // (This blocks the thread for the duration of the measurement)
-///     let lux = sensor.get_ambient_light_intensity_single_shot(&mut delay, &mut i2c).unwrap();
-///
-///     println!("Ambient light intensity: {} lux", lux);
-/// }
-/// ```
-///
-/// ### Continuous measurement
-///
-/// ```rust
-/// use bh1730fvc::{BH1730FVC, Gain, Mode};
-/// use embedded_hal::blocking::i2c::{Write, WriteRead};
-/// use embedded_hal::blocking::delay::DelayMs;
-///
-/// fn main() {
-///     let mut delay = MockNoop::new();
-///     let mut i2c = MockI2c::new();
-///     let mut sensor = BH1730FVC::new(&mut delay, &mut i2c).unwrap();
-///
-///     // Start continuous measurement mode, sensor will keep measuring and overwriting the
-///     // last measured value until stopped
-///     sensor.start_continuous_measurement(&mut i2c).unwrap();
-///
-///     // Read the last measured value (this does not block, but will return error
-///     // BH1730FVCError::NoDataAvailable if no valid data is available (yet))
-///     let lux = sensor.get_last_ambient_light_intensity(&mut i2c).unwrap();
-///
-///     // Stop continuous measurement mode
-///     sensor.stop_continuous_measurement(&mut i2c).unwrap();
-///
-///     // Print the last measured value
-///     println!("Ambient light intensity: {} lux", lux);
-/// }
-/// ```
+#![cfg_attr(not(test), no_std)]
 
 /// I2C address for the BH1730FVC sensor.
 pub const BH1730FVC_ADDR: u8 = 0x29;
@@ -330,6 +330,7 @@ pub enum BH1730FVCError {
     NoDataAvailable,
 }
 
+// All data registers of the BH1730FVC sensor.
 pub enum DataRegister {
     /// Mode control register
     Control = 0x00,
