@@ -2,8 +2,8 @@
 
 A Rust no-std driver for the BH1730FVC ambient light sensor.
 
-[![Crates.io](https://img.shields.io/crates/v/bh1730fvc-rs.svg)](https://crates.io/crates/bh1730fvc-rs)
-[![Docs.rs](https://docs.rs/bh1730fvc-rs/badge.svg)](https://docs.rs/bh1730fvc-rs)
+[![Crates.io](https://img.shields.io/crates/v/bh1730fvc.svg)](https://crates.io/crates/bh1730fvc)
+[![Docs.rs](https://docs.rs/bh1730fvc/badge.svg)](https://docs.rs/bh1730fvc)
 
 ## Description
 
