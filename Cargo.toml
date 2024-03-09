@@ -9,7 +9,7 @@ keywords = ["bh1730fvc", "ambient light sensor", "i2c", "embedded", "no-std"]
 categories = ["embedded", "no-std", "sensors"]
 readme = "README.md"
 repository = "https://github.com/ducktec/bh1730fvc-rs"
-documentation = "https://docs.rs/bh1730fvc-rs"
+documentation = "https://docs.rs/bh1730fvc"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
