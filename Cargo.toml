@@ -15,6 +15,7 @@ documentation = "https://docs.rs/bh1730fvc"
 
 [dependencies]
 embedded-hal = "0.2"
+embedded-hal-async = "1.0.0"
 log = { version = "0.4.20" }
 
 [dev-dependencies]
@@ -22,3 +23,6 @@ embedded-hal-mock = "0.8"
 
 [target.'cfg(all(target_arch = "arm"))'.dev-dependencies]
 linux-embedded-hal = "0.2.2"
+
+[features]
+async = []
