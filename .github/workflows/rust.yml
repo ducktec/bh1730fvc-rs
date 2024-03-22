@@ -19,4 +19,4 @@ jobs:
     - name: Build (async)
       run: cargo build --features async --verbose
     - name: Run tests
-      run: cargo test --lib --verbose
+      run: cargo test --lib --verbose --features unittesting
