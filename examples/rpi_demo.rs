@@ -1,7 +1,7 @@
 // This example demonstrates how to use the BH1730FVC sensor with a Raspberry Pi.
 // It is so far untested, but should be a good reference for any kind of embedded system.
 
-use bh1730fvc::BH1730FVC;
+use bh1730fvc::blocking::BH1730FVC;
 use embedded_hal::blocking::delay::DelayMs;
 use linux_embedded_hal as hal;
 
