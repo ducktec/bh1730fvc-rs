@@ -1,11 +1,95 @@
-//! Blocking API
+//! # Blocking API
 //!
 //! This module contains the blocking API for the BH1730FVC sensor.
+//! It is based on the `embedded-hal` traits and is intended to be used
+//! with synchronous blocking code.
+//!
+//! The methods return `Result` with the error type being `BH1730FVCError`.
+//!
+//! ## Examples
+//! ### Creating a driver instance
+//!
+//! ```rust
+//! use bh1730fvc::{BH1730FVC, Gain, Mode};
+//! use embedded_hal::blocking::i2c::{Write, WriteRead};
+//! use embedded_hal::blocking::delay::DelayMs;
+//!
+//!
+//! fn main() {
+//!     let mut delay = MockNoop::new();
+//!     let mut i2c = MockI2c::new();
+//!     let mut sensor = BH1730FVC::new(&mut delay, &mut i2c).unwrap();
+//! }
+//! ```
+//!
+//! ### Reading the ambient light intensity
+//!
+//! ```rust
+//! use bh1730fvc::{BH1730FVC, Gain, Mode};
+//! use embedded_hal::blocking::i2c::{Write, WriteRead};
+//! use embedded_hal::blocking::delay::DelayMs;
+//!
+//! fn main() {
+//!     let mut delay = MockNoop::new();
+//!     let mut i2c = MockI2c::new();
+//!     let mut sensor = BH1730FVC::new(&mut delay, &mut i2c).unwrap();
+//!
+//!     // Read sensor value once, sensor goes back to sleep after this
+//!     // (This blocks the thread for the duration of the measurement)
+//!     let lux = sensor.get_ambient_light_intensity_single_shot(&mut delay, &mut i2c).unwrap();
+//!
+//!     println!("Ambient light intensity: {} lux", lux);
+//! }
+//! ```
+//!
+//! ### Continuous measurement
+//!
+//! ```rust
+//! use bh1730fvc::{BH1730FVC, Gain, Mode};
+//! use embedded_hal::blocking::i2c::{Write, WriteRead};
+//! use embedded_hal::blocking::delay::DelayMs;
+//!
+//! fn main() {
+//!     let mut delay = MockNoop::new();
+//!     let mut i2c = MockI2c::new();
+//!     let mut sensor = BH1730FVC::new(&mut delay, &mut i2c).unwrap();
+//!
+//!     // Start continuous measurement mode, sensor will keep measuring and overwriting the
+//!     // last measured value until stopped
+//!     sensor.start_continuous_measurement(&mut i2c).unwrap();
+//!
+//!     // Read the last measured value (this does not block, but will return error
+//!     // BH1730FVCError::NoDataAvailable if no valid data is available (yet))
+//!     let lux = sensor.get_last_ambient_light_intensity(&mut i2c).unwrap();
+//!
+//!     // Stop continuous measurement mode
+//!     sensor.stop_continuous_measurement(&mut i2c).unwrap();
+//!
+//!     // Print the last measured value
+//!     println!("Ambient light intensity: {} lux", lux);
+//! }
+//! ```
 
 use crate::{
     calculate_lux, itime_ms_to_itime, itime_to_itime_ms, BH1730FVCError, DataRegister, Gain, Mode,
-    Result, BH1730FVC, BH1730FVC_ADDR, BH1730FVC_RESET_CMD,
+    Result, BH1730FVC_ADDR, BH1730FVC_RESET_CMD,
 };
+
+/// Represents an I2C-connected BH1730FVC sensor.
+#[derive(Copy, Clone, Debug)]
+pub struct BH1730FVC<I2C, D> {
+    /// Marker to satisfy the compiler.
+    _delay: core::marker::PhantomData<D>,
+
+    /// I2C Interface for communcating with the sensor.
+    _i2c: core::marker::PhantomData<I2C>,
+
+    /// The gain of the sensor.
+    gain: Gain,
+
+    /// The integration time of the sensor.
+    integration_time_ms: f32,
+}
 
 impl<I2C, D> BH1730FVC<I2C, D>
 where

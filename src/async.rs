@@ -1,11 +1,67 @@
-//! Blocking API
+//! # Async API
 //!
-//! This module contains the blocking API for the BH1730FVC sensor.
+//! This module contains the asynchronous API for the BH1730FVC sensor.
+//! It is based on the `embedded-hal-async` traits and is intended to be used
+//! with async/await syntax.
+//!
+//! The API is similar to the blocking API, but all methods are asynchronous and
+//! take a mutable reference to the I2C bus and a mutable reference to a delay
+//! implementation as arguments.
+//!
+//! The methods are all `async` and return `Result` with the error type being
+//! `BH1730FVCError`.
+//!
+//! # Example
+//!
+//! ```rust
+//! use bh1730fvc::BH1730FVC;
+//! use embedded_hal_async::blocking::delay::DelayMs;
+//! use embedded_hal_async::i2c::I2c;
+//!
+//! async fn main() {
+//!     let mut i2c = I2c::new(/* ... */);
+//!     let mut delay = Delay::new(/* ... */);
+//!
+//!     let mut bh1730fvc = BH1730FVC::new(&mut delay, &mut i2c).await.unwrap();
+//!
+//!     let device_id = bh1730fvc.read_id(&mut i2c).await.unwrap();
+//!     log::info!(
+//!         "Device ID: (Part Number: 0x{:02X}, Revision ID: 0x{:02X}",
+//!         device_id.0,
+//!         device_id.1,
+//!     );
+//!
+//!     match bh1730fvc.get_ambient_light_intensity_single_shot(&mut delay, &mut i2c).await {
+//!         Ok(reading) => log::info!("Single shot measurement - lux value: {}", reading),
+//!         Err(e) => log::error!("Error reading sensor: {:?}", e),
+//!     }
+//! }
+//! ```
+//!
+//! The example above demonstrates how to use the BH1730FVC sensor with an async
+//! runtime. The `embedded-hal-async` traits are used for the I2C and delay
+//! abstractions.
 
 use crate::{
     calculate_lux, itime_ms_to_itime, itime_to_itime_ms, BH1730FVCError, DataRegister, Gain, Mode,
-    Result, BH1730FVC, BH1730FVC_ADDR, BH1730FVC_RESET_CMD,
+    Result, BH1730FVC_ADDR, BH1730FVC_RESET_CMD,
 };
+
+/// Represents an I2C-connected BH1730FVC sensor.
+#[derive(Copy, Clone, Debug)]
+pub struct BH1730FVC<I2C, D> {
+    /// Marker to satisfy the compiler.
+    _delay: core::marker::PhantomData<D>,
+
+    /// I2C Interface for communcating with the sensor.
+    _i2c: core::marker::PhantomData<I2C>,
+
+    /// The gain of the sensor.
+    gain: Gain,
+
+    /// The integration time of the sensor.
+    integration_time_ms: f32,
+}
 
 impl<I2C, D> BH1730FVC<I2C, D>
 where

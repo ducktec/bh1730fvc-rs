@@ -25,3 +25,7 @@ linux-embedded-hal = "0.2.2"
 [features]
 async = []
 unittesting = ["dep:embedded-hal-mock"]
+
+[package.metadata.docs.rs]
+# Show async feature on docs.rs as well
+all-features = true
